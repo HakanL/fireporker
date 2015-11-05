@@ -22,3 +22,18 @@ select,
 textarea {
     max-width: 280px;
 }
+
+.logo{
+    height: 40px;
+    margin: 5px;
+}
+
+.card_visible {
+    width: 100px;
+    height: 150px;
+    border: 1px solid #000;
+    font-size: 36pt;
+    display: table-cell;
+    vertical-align: middle;
+    text-align: center;
+}

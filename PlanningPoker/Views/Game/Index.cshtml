@@ -4,18 +4,6 @@
     ViewBag.Title = "Index";
 }
 
-@section style {
-    .card_visible {
-    width: 100px;
-    height: 150px;
-    border: 1px solid #000;
-    font-size: 36pt;
-    display: table-cell;
-    vertical-align: middle;
-    text-align: center;
-    }
-}
-
 <div class="row">
     <div class="col-xs-9">
         <br />
@@ -25,7 +13,7 @@
             <div class="panel-body">
                 <div data-bind="foreach: players" class="clearfix">
                     <div data-bind="visible: CurrentVote() != null" style="display: none; padding-right: 15px;" class="pull-left">
-                        <img src="~/Content/cardback.jpg" height="150" data-bind="visible: $root.allVoted() == false && Id() != myPlayer.Id()" />
+                        <img src="~/Content/CardBack.png" height="150" data-bind="visible: $root.allVoted() == false && Id() != myPlayer.Id()" />
                         <div data-bind="text: CurrentVote(), visible: $root.allVoted() == true || Id() == myPlayer.Id()" class="card_visible"></div>
                         <br />
                         <span data-bind="text: Name"></span>
