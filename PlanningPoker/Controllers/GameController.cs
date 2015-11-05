@@ -113,10 +113,12 @@ namespace PlanningPoker.Controllers
         // GET: Game/Create
         public ActionResult Create()
         {
-            // TODO: Temp code
+#if DEBUG
             var game = new PokerGame("Test", "Michael Kaltner", "Test");
             return View(game);
-            //return View();
+#else
+            return View();
+#endif
         }
         
         // POST: Game/Create
