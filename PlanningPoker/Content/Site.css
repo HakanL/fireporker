@@ -29,11 +29,14 @@ textarea {
 }
 
 .card_visible {
-    width: 100px;
+    width: 106px;
     height: 150px;
-    border: 1px solid #000;
+    border: 7px solid #DDC178;
+    background-color: #521713;
+    color: #DDC178;
     font-size: 36pt;
     display: table-cell;
     vertical-align: middle;
     text-align: center;
+    border-radius: 5px;
 }

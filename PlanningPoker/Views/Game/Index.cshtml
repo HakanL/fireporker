@@ -12,10 +12,11 @@
             <div class="panel-heading">Current Votes</div>
             <div class="panel-body">
                 <div data-bind="foreach: players" class="clearfix">
-                    <div data-bind="visible: CurrentVote() != null" style="display: none; padding-right: 15px;" class="pull-left">
-                        <img src="~/Content/CardBack.png" height="150" data-bind="visible: $root.allVoted() == false && Id() != myPlayer.Id()" />
-                        <div data-bind="text: CurrentVote(), visible: $root.allVoted() == true || Id() == myPlayer.Id()" class="card_visible"></div>
-                        <br />
+                    <div data-bind="visible: CurrentVote() != null, attr: {'id': Id()}" style="display: none; padding-right: 15px; text-align: center;" class="pull-left">
+                        <div data-bind="visible: $root.allVoted() == false && (Id() != myPlayer.Id() || !$root.showMyVote())">
+                            <img src="~/Content/CardBack.png" height="150" />
+                        </div>
+                        <div data-bind="text: CurrentVote(), visible: $root.allVoted() == true || (Id() == myPlayer.Id() && $root.showMyVote())" class="card_visible"></div>
                         <span data-bind="text: Name"></span>
                     </div>
                 </div>
@@ -24,26 +25,20 @@
 
         <div class="panel panel-default" data-bind="visible: $root.allVoted() == false">
             <div class="panel-heading">Select your estimate</div>
-            <div class="panel-body">
-                <button type="button" class="btn btn-default" data-bind="click: submitVote.bind($data,0.5)">0.5</button>
-                <button type="button" class="btn btn-default" data-bind="click: submitVote.bind($data,1)">1</button>
-                <button type="button" class="btn btn-default" data-bind="click: submitVote.bind($data,2)">2</button>
-                <button type="button" class="btn btn-default" data-bind="click: submitVote.bind($data,3)">3</button>
-                <button type="button" class="btn btn-default" data-bind="click: submitVote.bind($data,5)">5</button>
-                <button type="button" class="btn btn-default" data-bind="click: submitVote.bind($data,8)">8</button>
-                <button type="button" class="btn btn-default" data-bind="click: submitVote.bind($data,13)">13</button>
-                <button type="button" class="btn btn-default" data-bind="click: submitVote.bind($data,20)">20</button>
-                <button type="button" class="btn btn-default" data-bind="click: submitVote.bind($data,40)">40</button>
-                <button type="button" class="btn btn-default" data-bind="click: submitVote.bind($data,100)">100</button>
-                <button type="button" class="btn btn-default" data-bind="click: submitVote.bind($data,0)">?</button>
+            <div class="panel-body" data-bind="foreach: fibSequence">
+                <button type="button" class="btn btn-default" data-bind="click: $root.submitVote.bind($data), text: $data"></button>
             </div>
         </div>
 
         <div class="panel panel-default" data-bind="visible: myPlayer.IsHost() == true">
             <div class="panel-heading">Host tools</div>
             <div class="panel-body form-inline">
+                <input type="checkbox" id="showMyVote" data-bind="checked: showMyVote" />
+                <label class="control-label" for="showMyVote" data-bind="text: showHideLabel(showMyVote,'my vote')"></label>
+
                 <input type="checkbox" id="showMedian" data-bind="checked: showMedian"/>
-                <label class="control-label" for="showMedian">Median</label>
+                <label class="control-label" for="showMedian" data-bind="text: showHideLabel(showMedian,'median')"></label>
+
                 <input id="median" type="text" data-bind="value: voteMedian, visible: showMedian" width="3" disabled="disabled" style="width: 55px;" class="form-control"/>
                 <button type="button" class="btn btn-default" data-bind="click: clearVotes">Clear Votes</button>
             </div>
@@ -79,7 +74,8 @@
         var _playerId = "@ViewBag.PlayerId";
         var initialPlayers = convertToObservableList(@(Html.Raw(Json.Encode(Model.Players))));
         var myPlayer = getByValue(initialPlayers, "Id", _playerId);
-
+        var _fibSequence = [0, 0.5, 1, 2, 3, 5, 8, 13, 20, 40, 100];
+        
         function getByValue(arr, attr, value) {
             if (typeof arr == "object") {
                 var result = arr.filter(function(o) { return o[attr]() == value; });
@@ -93,11 +89,7 @@
         function convertToObservableList(list) {
             var newList = [];
             $.each(list, function(i, obj) {
-                var newObj = {};
-                Object.keys(obj).forEach(function(key) {
-                    newObj[key] = ko.observable(obj[key]);
-                });
-                newList.push(newObj);
+                newList.push(convertToObservable(obj));
             });
             return newList;
         }
@@ -120,9 +112,8 @@
         }
 
         function findNearestFib(value) {
-            var fib = [0.5, 1, 2, 3, 5, 8, 13, 20, 40, 100];
             var nearest = value;
-            $.each(fib, function(i, obj) {
+            $.each(_fibSequence, function (i, obj) {
                 if (obj >= value) {
                     nearest = obj;
                     return false;
@@ -135,7 +126,9 @@
             var self = this;
             this.pokerHub = $.connection.pokerHub;
             this.players = ko.observableArray(initialPlayers);
-            this.showMedian = ko.observable(false);
+            this.showMedian = ko.observable(true);
+            this.showMyVote = ko.observable(true);
+            this.fibSequence = ko.observableArray(_fibSequence);
 
             this.allVoted = ko.computed(function() {
                 var count = 0;
@@ -159,6 +152,13 @@
 
                 return median(votes);
             }, this);
+
+            this.showHideLabel = function(show, text) {
+                if (show()) {
+                    return "Hide " + text;
+                }
+                return "Show " + text;
+            }
 
             this.submitVote = function(points) {
                 self.pokerHub.server.playerVoted(_gameId, _playerId, points);
@@ -189,6 +189,7 @@
             this.pokerHub.client.playerVoted = function(playerId, points) {
                 var player = getByValue(self.players, "Id", playerId);
                 if (player != null) {
+                    $("#" + playerId).fadeIn("fast");
                     player.CurrentVote(points);
                 }
             };
