@@ -144,10 +144,6 @@ namespace PlanningPoker.Controllers
                 if (isValid)
                 {
                     var game = new PokerGame(gameName, hostName, gameDescription);
-#if DEBUG
-                    var story = game.AddStory("Test story", "Description of the test story goes here...");
-                    story.Estimate = 8;
-#endif
                     GameManager.StorePokerGame(game);
 
                     var cookie = new HttpCookie(CookieName)
