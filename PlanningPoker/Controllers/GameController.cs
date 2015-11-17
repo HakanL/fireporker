@@ -93,9 +93,9 @@ namespace PlanningPoker.Controllers
                         var cookie = new HttpCookie(CookieName)
                         {
                             ["GameId"] = gameId.ToString(),
-                            ["PlayerId"] = player.Id.ToString()
+                            ["PlayerId"] = player.Id.ToString(),
+                            Expires = game.ExpirationDate
                         };
-                        cookie.Expires = game.ExpirationDate;
                         Response.Cookies.Add(cookie);
                     }
                     
@@ -144,6 +144,10 @@ namespace PlanningPoker.Controllers
                 if (isValid)
                 {
                     var game = new PokerGame(gameName, hostName, gameDescription);
+#if DEBUG
+                    var story = game.AddStory("Test story", "Description of the test story goes here...");
+                    story.Estimate = 8;
+#endif
                     GameManager.StorePokerGame(game);
 
                     var cookie = new HttpCookie(CookieName)

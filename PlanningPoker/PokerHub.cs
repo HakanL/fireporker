@@ -59,5 +59,32 @@ namespace PlanningPoker
         {
             this.Groups.Add(this.Context.ConnectionId, groupName);
         }
+
+        public void AddStory(string gameId, string title, string description)
+        {
+            var gid = Guid.Parse(gameId);
+
+            var game = GameManager.GetPokerGame(gid);
+            if (game != null)
+            {
+                var story = game.AddStory(title, description);
+                Clients.Group(gameId).storyAdded(story);
+            }
+        }
+
+        public void AcceptEstimate(string gameId, string storyId, float estimate)
+        {
+            var gid = Guid.Parse(gameId);
+            var sid = Guid.Parse(storyId);
+
+            var game = GameManager.GetPokerGame(gid);
+            if (game != null)
+            {
+                var story = game.GetStory(sid);
+                story.Estimate = estimate;
+                ClearVotes(gameId);
+                Clients.Group(gameId).estimateAccepted(storyId, estimate);
+            }
+        }
     }
 }

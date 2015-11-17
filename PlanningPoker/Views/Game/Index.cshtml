@@ -4,7 +4,7 @@
         <div class="col-sm-8">
             <br />
 
-            <div class="panel panel-default">
+            <div class="panel panel-default" data-bind="visible: currentStory() != null">
                 <div class="panel-heading">Current Votes</div>
                 <div class="panel-body">
                     <div data-bind="foreach: votes" class="clearfix">
@@ -19,14 +19,14 @@
                 </div>
             </div>
 
-            <div class="panel panel-default" data-bind="visible: $root.allVoted() == false">
+            <div class="panel panel-default" data-bind="visible: allVoted() == false && currentStory() != null">
                 <div class="panel-heading">Select your estimate</div>
                 <div class="panel-body" data-bind="foreach: fibSequence">
                     <button type="button" class="btn btn-default" data-bind="click: $root.submitVote.bind($data), text: $data"></button>
                 </div>
             </div>
 
-            <div class="panel panel-default" data-bind="visible: myPlayer.IsHost() == true">
+            <div class="panel panel-default" data-bind="visible: myPlayer.IsHost() == true && currentStory() != null">
                 <div class="panel-heading">Host tools</div>
                 <div class="panel-body form-inline">
 
@@ -39,22 +39,44 @@
                         <input id="median" type="text" data-bind="value: voteMedian, visible: showMedian" width="3" disabled="disabled" style="width: 55px;" class="form-control"/>
                     </div>
 
-                    <button type="button" class="btn btn-default" data-bind="click: clearVotes">Clear Votes</button>
+                    <button type="button" class="btn btn-danger" data-bind="click: clearVotes">Clear votes</button>
 
+                    <div class="form-group" data-bind="visible: allVoted">
+                        <button type="button" class="btn btn-success" data-bind="click: acceptEstimate">Accept estimate</button>
+                        <select data-bind="options: fibSequence, value: estimate" class="form-control" style="width: 75px"></select>
+                    </div>
+                    
                 </div>
             </div>
 
-            <div class="panel panel-default" data-bind="visible: myPlayer.IsHost() == true">
+            <div class="panel panel-default" data-bind="visible: myPlayer.IsHost() == true && currentStory() == null">
                 <div class="panel-heading">Story</div>
                 <div class="panel-body">
                     <label for="storyTitle"class="control-label">Title</label>
-                    <input id="storyTitle" type="text" class="form-control" style="max-width: 100%"/>
+                    <input id="storyTitle" type="text" class="form-control" style="max-width: 100%" data-bind="value: storyTitle"/>
 
                     <label for="storyDescription" class="control-label">Description</label>
-                    <textarea id="storyDescription" class="form-control" style="max-width: 100%"></textarea>
+                    <textarea id="storyDescription" class="form-control" style="max-width: 100%" data-bind="value: storyDescription"></textarea>
                 </div>
                 <div class="panel-footer">
-                    <button type="button" class="btn btn-success" data-bind="enable: storyTitle.length">Add story</button> or <a href="#">Cancel</a>
+                    <button type="button" class="btn btn-success" data-bind="click: addStory">Add story</button> or <a href="#">Cancel</a>
+                </div>
+            </div>
+
+            <div class="panel panel-default">
+                <div class="panel-heading">Stories</div>
+                <div class="panel-body">
+                    <ul class="list-group" data-bind="foreach: stories">
+                        <li class="list-group-item">
+                            <span class="badge" data-bind="visible: Estimate() > 0, text: Estimate"></span>
+                            <span class="badge" data-bind="visible: Estimate() == null">CURRENT</span>
+                            <span data-bind="text: $index()+1"></span>.&nbsp;<span data-bind="text: Title"></span>
+                            <span data-bind="visible: Description().length">
+                                <br/>
+                                <em data-bind="text: Description" style="font-style: italic"></em>
+                            </span>
+                        </li>
+                    </ul>
                 </div>
             </div>
         </div>
@@ -92,6 +114,7 @@
         var _gameId = "@ViewBag.GameId";
         var _playerId = "@ViewBag.PlayerId";
         var initialPlayers = convertToObservableList(@(Html.Raw(Json.Encode(Model.Players))));
+        var initialStories = convertToObservableList(@(Html.Raw(Json.Encode(Model.Stories))));
         var myPlayer = getByValue(initialPlayers, "Id", _playerId);
         var _fibSequence = [0, 0.5, 1, 2, 3, 5, 8, 13, 20, 40, 100, "?"];
 
@@ -155,14 +178,28 @@
             this.showMyVote = ko.observable(true);
             this.fibSequence = ko.observableArray(_fibSequence);
             this.votes = ko.observableArray([]);
+            this.stories = ko.observableArray(initialStories);
+            this.storyTitle = ko.observable("");
+            this.storyDescription = ko.observable("");
+            this.estimate = ko.observable(0);
 
-            this.allVoted = ko.computed(function() {
-                var count = 0;
-                $.each(self.players(), function(i, obj) {
-                    if (obj.CurrentVote() != null)
-                        count++;
+            this.addStory = function () {
+                if (self.storyTitle().length) {
+                    self.pokerHub.server.addStory(_gameId, self.storyTitle(), self.storyDescription());
+                    self.storyTitle("");
+                    self.storyDescription("");
+                } else {
+                    alert("Invalid title");
+                }
+            }
+
+            this.currentStory = ko.computed(function () {
+                var currentStory = null;
+                $.each(self.stories(), function (i, obj) {
+                    if (obj.Estimate() == null)
+                        currentStory = obj;
                 });
-                return count == self.players().length;
+                return currentStory;
             }, this);
 
             this.voteMedian = ko.computed(function() {
@@ -177,6 +214,21 @@
                     return 0;
 
                 return median(votes);
+            }, this);
+
+            this.allVoted = ko.computed(function () {
+                var count = 0;
+                $.each(self.players(), function (i, obj) {
+                    if (obj.CurrentVote() != null)
+                        count++;
+                });
+                var allVoted = count == self.players().length;
+                if (allVoted) {
+                    self.estimate(self.voteMedian());
+                } else {
+                    self.estimate(0);
+                }
+                return allVoted;
             }, this);
 
             this.showHideLabel = function(show, text) {
@@ -197,12 +249,23 @@
                 self.pokerHub.server.clearVotes(_gameId);
             }
 
+            this.acceptEstimate = function () {
+                self.pokerHub.server.acceptEstimate(_gameId, self.currentStory().Id(), self.estimate());
+            }
+
             this.removePlayer = function(player) {
                 self.pokerHub.server.playerLeft(_gameId, player.Id());
             }
 
             this.pokerHub.client.playerJoined = function(player) {
                 self.players.push(convertToObservable(player));
+            };
+
+            this.pokerHub.client.estimateAccepted = function (storyId, estimate) {
+                var story = getByValue(self.stories(), "Id", storyId);
+                if (story != null) {
+                    story.Estimate(estimate);
+                }
             };
 
             this.pokerHub.client.playerLeft = function(playerId) {
@@ -213,6 +276,10 @@
                     }
                     self.players.remove(p);
                 }
+            };
+
+            this.pokerHub.client.storyAdded = function (story) {
+                self.stories.push(convertToObservable(story));
             };
 
             this.pokerHub.client.playerVoted = function(playerId, points) {

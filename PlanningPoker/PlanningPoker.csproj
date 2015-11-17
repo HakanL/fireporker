@@ -151,6 +151,7 @@
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
     <Compile Include="Models\GameManager.cs" />
+    <Compile Include="Models\Story.cs" />
     <Compile Include="Models\Player.cs" />
     <Compile Include="Models\PokerGame.cs" />
     <Compile Include="PokeR.cs" />

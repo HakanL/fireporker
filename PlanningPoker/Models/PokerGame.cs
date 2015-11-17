@@ -17,7 +17,8 @@ namespace PlanningPoker.Models
         public Player Host { get; set; }
         public IList<Player> Players { get; set; }
         public DateTime ExpirationDate { get; set; }
-        // TODO: Configurable number set
+        public IList<Story> Stories { get; set; }
+        // TODO: Configurable number set?
         
         public PokerGame(string name, string hostName, string description = "", string id = "")
         {
@@ -27,6 +28,7 @@ namespace PlanningPoker.Models
             Host = new Player(Id,hostName,true);
             Players = new List<Player> {Host};
             ExpirationDate = DateTime.UtcNow.AddDays(1);
+            Stories = new List<Story>();
 
             if (!string.IsNullOrEmpty(id))
             {
@@ -51,6 +53,18 @@ namespace PlanningPoker.Models
             var player = Players.FirstOrDefault(x => x.Id == playerId);
             if (player != null)
                 Players.Remove(player);
+        }
+
+        public Story AddStory(string title, string description)
+        {
+            var newStory = new Story(this.Id, title, description);
+            Stories.Add(newStory);
+            return newStory;
+        }
+
+        public Story GetStory(Guid storyId)
+        {
+            return Stories.FirstOrDefault(x => x.Id == storyId);
         }
 
         public void ClearVotes(Action<Guid> resetEvent)

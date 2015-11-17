@@ -11,7 +11,10 @@ namespace PlanningPoker.Models
         private static readonly object CacheLock = new object();
         private static readonly List<string> CacheKeys = new List<string>();
 
-        public static int GameCount => CacheKeys.Count;
+        public static int GameCount
+        {
+            get { return CacheKeys.Count; }
+        }
 
         public static void StorePokerGame(PokerGame game)
         {
