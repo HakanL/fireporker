@@ -1,63 +1,86 @@
 ﻿@model PlanningPoker.Models.PokerGame
+<form>
+    <div class="row">
+        <div class="col-sm-8">
+            <br />
 
-<div class="row">
-    <div class="col-xs-9">
-        <br />
-
-        <div class="panel panel-default">
-            <div class="panel-heading">Current Votes</div>
-            <div class="panel-body">
-                <div data-bind="foreach: votes" class="clearfix">
-                    <div data-bind="attr: {'id': PlayerId()}" style="display: none; padding-right: 15px; text-align: center;" class="pull-left">
-                        <div data-bind="visible: $root.allVoted() == false && (PlayerId() != myPlayer.Id() || !$root.showMyVote())">
-                            <img src="~/Content/CardBack.png" height="150" />
+            <div class="panel panel-default">
+                <div class="panel-heading">Current Votes</div>
+                <div class="panel-body">
+                    <div data-bind="foreach: votes" class="clearfix">
+                        <div data-bind="attr: {'id': PlayerId()}" style="display: none; padding-right: 15px; text-align: center;" class="pull-left">
+                            <div data-bind="visible: $root.allVoted() == false && (PlayerId() != myPlayer.Id() || !$root.showMyVote())">
+                                <img src="~/Content/CardBack.png" height="150" />
+                            </div>
+                            <div data-bind="text: Points(), visible: $root.allVoted() == true || (PlayerId() == myPlayer.Id() && $root.showMyVote())" class="card_visible"></div>
+                            <span data-bind="text: Name"></span>
                         </div>
-                        <div data-bind="text: Points(), visible: $root.allVoted() == true || (PlayerId() == myPlayer.Id() && $root.showMyVote())" class="card_visible"></div>
-                        <span data-bind="text: Name"></span>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <div class="panel panel-default" data-bind="visible: $root.allVoted() == false">
-            <div class="panel-heading">Select your estimate</div>
-            <div class="panel-body" data-bind="foreach: fibSequence">
-                <button type="button" class="btn btn-default" data-bind="click: $root.submitVote.bind($data), text: $data"></button>
-            </div>
-        </div>
-
-        <div class="panel panel-default" data-bind="visible: myPlayer.IsHost() == true">
-            <div class="panel-heading">Host tools</div>
-            <div class="panel-body form-inline">
-                <input type="checkbox" id="showMyVote" data-bind="checked: showMyVote" />
-                <label class="control-label" for="showMyVote" data-bind="text: showHideLabel(showMyVote,'my vote')"></label>
-
-                <input type="checkbox" id="showMedian" data-bind="checked: showMedian"/>
-                <label class="control-label" for="showMedian" data-bind="text: showHideLabel(showMedian,'median')"></label>
-
-                <input id="median" type="text" data-bind="value: voteMedian, visible: showMedian" width="3" disabled="disabled" style="width: 55px;" class="form-control"/>
-                <button type="button" class="btn btn-default" data-bind="click: clearVotes">Clear Votes</button>
-            </div>
-        </div>
-    </div>
-    <div class="col-xs-3">
-        <h3>@Model.Name</h3>
-        Participants (<span data-bind="text: players().length"></span>)
-        <div data-bind="foreach: players">
-            <div class="clearfix" style="white-space: nowrap">
-                <i style="padding-right: 3px; color:green" class="pull-left glyphicon glyphicon-ok" data-bind="visible: CurrentVote() != null"></i>
-                <div class="pull-left" style="padding-right: 3px;">
-                    <span data-bind="text: Name"></span>&nbsp;<span data-bind="visible: IsHost">(Host)</span><br/>
+            <div class="panel panel-default" data-bind="visible: $root.allVoted() == false">
+                <div class="panel-heading">Select your estimate</div>
+                <div class="panel-body" data-bind="foreach: fibSequence">
+                    <button type="button" class="btn btn-default" data-bind="click: $root.submitVote.bind($data), text: $data"></button>
                 </div>
-                <a href="#" data-bind="click: $root.removePlayer, visible: myPlayer.IsHost() && !IsHost()" style="color: red;"><i class="glyphicon glyphicon-remove"></i></a>
+            </div>
+
+            <div class="panel panel-default" data-bind="visible: myPlayer.IsHost() == true">
+                <div class="panel-heading">Host tools</div>
+                <div class="panel-body form-inline">
+
+                    <input type="checkbox" id="showMyVote" data-bind="checked: showMyVote"/>
+                    <label class="control-label" for="showMyVote" data-bind="text: showHideLabel(showMyVote,'my vote')"></label>
+
+                    <div class="form-group">
+                        <input type="checkbox" id="showMedian" data-bind="checked: showMedian"/>
+                        <label for="showMedian" data-bind="text: showHideLabel(showMedian,'median')" class="control-label"></label>
+                        <input id="median" type="text" data-bind="value: voteMedian, visible: showMedian" width="3" disabled="disabled" style="width: 55px;" class="form-control"/>
+                    </div>
+
+                    <button type="button" class="btn btn-default" data-bind="click: clearVotes">Clear Votes</button>
+
+                </div>
+            </div>
+
+            <div class="panel panel-default" data-bind="visible: myPlayer.IsHost() == true">
+                <div class="panel-heading">Story</div>
+                <div class="panel-body">
+                    <label for="storyTitle"class="control-label">Title</label>
+                    <input id="storyTitle" type="text" class="form-control" style="max-width: 100%"/>
+
+                    <label for="storyDescription" class="control-label">Description</label>
+                    <textarea id="storyDescription" class="form-control" style="max-width: 100%"></textarea>
+                </div>
+                <div class="panel-footer">
+                    <button type="button" class="btn btn-success" data-bind="enable: storyTitle.length">Add story</button> or <a href="#">Cancel</a>
+                </div>
             </div>
         </div>
-        <div>
-            <h3>Chat</h3>
-            Coming soon...?
+        <div class="col-sm-4">
+            <h3>@Model.Name</h3>
+            <i>@Model.Description</i>
+            <p>
+                Participants (<span data-bind="text: players().length"></span>)
+                <div data-bind="foreach: players">
+                    <div class="clearfix" style="white-space: nowrap">
+                        <i style="padding-right: 3px; color: green" class="pull-left glyphicon glyphicon-ok" data-bind="visible: CurrentVote() != null"></i>
+                        <div class="pull-left" style="padding-right: 3px;">
+                            <span data-bind="text: Name"></span>&nbsp;<span data-bind="visible: IsHost">(Host)</span><br />
+                        </div>
+                        <a href="#" data-bind="click: $root.removePlayer, visible: myPlayer.IsHost() && !IsHost()" style="color: red;"><i class="glyphicon glyphicon-remove"></i></a>
+                    </div>
+                </div>
+                <div>
+                    <h3>Chat</h3>
+                    Coming soon...
+                </div>
+            </p>
+            
         </div>
-    </div>
-</div>
+    </div>    
+</form>
 
 @section scripts {
     @Scripts.Render("~/bundles/knockout")

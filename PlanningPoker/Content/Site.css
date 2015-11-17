@@ -8,7 +8,7 @@
     padding-left: 15px;
     padding-right: 15px;
 }
-
+<hr />
 /* Override the default bootstrap behavior where horizontal description lists 
    will truncate terms that are too long to fit in the left column 
 */
@@ -39,4 +39,23 @@ textarea {
     vertical-align: middle;
     text-align: center;
     border-radius: 5px;
+}
+
+.cover {
+    width: 550px;
+}
+
+@media (min-width: 1200px) {
+}
+
+@media (min-width: 992px) and (max-width: 1199px) {
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+}
+
+@media (max-width: 767px) {
+    .cover {
+        width: 400px;
+    }
 }
