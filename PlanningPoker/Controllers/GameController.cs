@@ -10,13 +10,13 @@ namespace PlanningPoker.Controllers
     public class GameController : Controller
     {
         private readonly static Lazy<PokeR> _instance = new Lazy<PokeR>(() => new PokeR(GlobalHost.ConnectionManager.GetHubContext<PokerHub>()));
-        private static string _cookieName = "PlanningPoker";
-        
+        private const string CookieName = "PlanningPoker";
+
         // GET: Game
         public ActionResult Index(Guid id)
         {
             // If no cookie, invite the user to join the game
-            var cookie = Request.Cookies[_cookieName];
+            var cookie = Request.Cookies[CookieName];
             if (cookie == null)
             {
                 return RedirectToAction("Join", new {id});
@@ -36,7 +36,7 @@ namespace PlanningPoker.Controllers
             var game = GameManager.GetPokerGame(id);
             if (game == null)
             {
-                Response.Cookies.Remove(_cookieName);
+                Response.Cookies.Remove(CookieName);
                 return RedirectToAction("Create");
             }
 
@@ -90,7 +90,7 @@ namespace PlanningPoker.Controllers
 
                         _instance.Value.PlayerJoined(gameId, player);
 
-                        var cookie = new HttpCookie(_cookieName)
+                        var cookie = new HttpCookie(CookieName)
                         {
                             ["GameId"] = gameId.ToString(),
                             ["PlayerId"] = player.Id.ToString()
@@ -122,7 +122,13 @@ namespace PlanningPoker.Controllers
             return View();
 #endif
         }
-        
+
+        public ActionResult List()
+        {
+            var games = GameManager.GetPokerGames();
+            return View(games);
+        }
+
         // POST: Game/Create
         [HttpPost]
         public ActionResult Create(FormCollection collection)
@@ -140,7 +146,7 @@ namespace PlanningPoker.Controllers
                     var game = new PokerGame(gameName, hostName, gameDescription);
                     GameManager.StorePokerGame(game);
 
-                    var cookie = new HttpCookie(_cookieName)
+                    var cookie = new HttpCookie(CookieName)
                     {
                         ["GameId"] = game.Id.ToString(),
                         ["PlayerId"] = game.Host.Id.ToString()

@@ -1,0 +1,27 @@
+﻿@model IEnumerable<PlanningPoker.Models.PokerGame>
+
+@{
+    ViewBag.Title = "Join Game";
+}
+
+<h2>Games</h2>
+
+<table class="table table-striped table-hover">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Players</th>
+            <th>Expires</th>
+        </tr>
+    </thead>
+    <tbody>
+    @foreach (var game in Model)
+    {
+        <tr>
+            <td>@game.Name</td>
+            <td>@game.Players.Count</td>
+            <td>@game.ExpirationDate.ToString("R")</td>
+        </tr>
+    }
+    </tbody>
+</table>

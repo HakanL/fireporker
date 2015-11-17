@@ -203,6 +203,7 @@
     <Content Include="Views\Game\Index.cshtml" />
     <Content Include="Views\Game\Create.cshtml" />
     <Content Include="Views\Game\Join.cshtml" />
+    <Content Include="Views\Game\List.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
