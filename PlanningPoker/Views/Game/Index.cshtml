@@ -129,15 +129,19 @@
     <script src="~/signalr/hubs"></script>
 
     <script type="text/javascript">
-        var _gameId = "@ViewBag.GameId";
-        var _playerId = "@ViewBag.PlayerId";
-        var initialPlayers = convertToObservableList(@(Html.Raw(Json.Encode(Model.Players))));
-        var initialStories = convertToObservableList(@(Html.Raw(Json.Encode(Model.Stories))));
-        var _roundStarted = @(Html.Raw(Json.Encode(Model.RoundStarted)));
+    var _gameId = "@ViewBag.GameId";
+    var _playerId = "@ViewBag.PlayerId";
+    var initialPlayers = convertToObservableList(@(Html.Raw(Json.Encode(Model.Players))));
+    var initialStories = convertToObservableList(@(Html.Raw(Json.Encode(Model.Stories))));
+    var _roundStarted = @(Html.Raw(Json.Encode(Model.RoundStarted)));
         var myPlayer = getByValue(initialPlayers, "Id", _playerId);
         var _fibSequence = [0, 0.5, 1, 2, 3, 5, 8, 13, 20, 40, 100, "?"];
-        var dateOffset = moment.utc(moment.utc().diff(moment("@ViewBag.Now", "MM/DD/YYYY hh:mm:ss a").utc())).seconds();
-        
+
+        var now = moment.utc();
+        var vbNow = moment("@ViewBag.Now", "MM/DD/YYYY hh:mm:ss a").utc();
+        var offset = moment.utc(now.diff(vbNow)).unix();
+        var dateOffset = offset - -28800;
+
         function getByValue(arr, attr, value) {
             if (typeof arr == "object") {
                 var result = arr.filter(function(o) { return o[attr]() == value; });
@@ -191,7 +195,7 @@
         }
 
         function getRoundTime() {
-            return moment.utc(moment.utc().diff(moment(_roundStarted))).add(dateOffset).format("mm:ss");
+            return moment.utc(moment.utc().diff(moment(_roundStarted))).add(dateOffset, "seconds").format("mm:ss");
         }
 
         var ViewModel = function() {
@@ -366,7 +370,7 @@
                         "Name": playerName,
                         "Points": p
                     });
-                    
+
                     self.votes.push(newVote);
                     $("#" + playerId).fadeIn("fast");
                 }
