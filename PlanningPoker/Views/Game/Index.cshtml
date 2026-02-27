@@ -397,12 +397,39 @@
 
         var vm = new ViewModel();
 
-        $(function() {
-            ko.applyBindings(vm);
+        var reconnectTimer = null;
+
+        function startConnection() {
             $.connection.hub.start().done(function() {
                 vm.joinGroup(_gameId);
                 vm.initializeVotes();
             });
+        }
+
+        function scheduleReconnect() {
+            if (reconnectTimer === null) {
+                reconnectTimer = setTimeout(function() {
+                    reconnectTimer = null;
+                    startConnection();
+                }, 5000);
+            }
+        }
+
+        $.connection.hub.disconnected(function() {
+            scheduleReconnect();
+        });
+
+        document.addEventListener('visibilitychange', function() {
+            if (!document.hidden && $.connection.hub.state === $.signalR.connectionState.disconnected) {
+                clearTimeout(reconnectTimer);
+                reconnectTimer = null;
+                startConnection();
+            }
+        });
+
+        $(function() {
+            ko.applyBindings(vm);
+            startConnection();
         });
     </script>
 }
