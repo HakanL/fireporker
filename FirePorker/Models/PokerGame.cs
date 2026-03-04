@@ -12,12 +12,16 @@ public class PokerGame
     
     [Display(Name = "Game description (optional)")]
     public string Description { get; set; }
-    
+
+    [Display(Name = "Jira base URL (optional)")]
+    public string JiraBaseUrl { get; set; }
+
     public Player Host { get; set; }
     public IList<Player> Players { get; set; }
     public DateTime ExpirationDate { get; set; }
     public IList<Story> Stories { get; set; }
     public DateTime RoundStarted { get; set; }
+    public bool HostCanVote { get; set; } = false;
 
     // Computed properties for list view
     public Story? CurrentStory => Stories.FirstOrDefault(s => s.Estimate == null);
@@ -66,11 +70,12 @@ public class PokerGame
 
     // TODO: Configurable number set?
     
-    public PokerGame(string name, string hostName, string description = "", string id = "")
+    public PokerGame(string name, string hostName, string description = "", string jiraBaseUrl = "", string id = "")
     {
         Id = string.IsNullOrEmpty(id) ? Guid.NewGuid() : Guid.Parse(id);
         Name = name;
         Description = description;
+        JiraBaseUrl = jiraBaseUrl;
         Host = new Player(Id, hostName, true);
         Players = new List<Player> { Host };
         ExpirationDate = DateTime.UtcNow.AddDays(1);

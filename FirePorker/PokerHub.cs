@@ -27,6 +27,8 @@ public class PokerHub : Hub
             var player = game.GetPlayer(pid);
             if (player != null)
             {
+                if (player.IsHost && !game.HostCanVote)
+                    return;
                 player.CurrentVote = points;
                 await Clients.Group(gameId).SendAsync("playerVoted", playerId, points);
             }

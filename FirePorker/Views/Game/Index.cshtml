@@ -6,7 +6,7 @@
 
             <div class="well well-sm" data-bind="visible: currentStory() != null" style="display: none;">
                 <em>Current story:</em><br/>
-                <strong data-bind="text: currentStoryTitle"></strong>
+                <strong data-bind="html: storyTitleHtml(currentStoryTitle())"></strong>
                 <em data-bind="text: currentStoryDescription"></em>
             </div>
 
@@ -33,7 +33,7 @@
                 </div>
             </div>
 
-            <div class="panel panel-info" data-bind="visible: allVoted() == false && currentStory() != null" style="display: none;">
+            <div class="panel panel-info" data-bind="visible: allVoted() == false && currentStory() != null && (myPlayer.isHost() == false || hostCanVote())" style="display: none;">
                 <div class="panel-heading">Select your estimate</div>
                 <div class="panel-body" data-bind="foreach: fibSequence">
                     <button type="button" class="btn btn-default" data-bind="click: $root.submitVote.bind($data), text: $data"></button>
@@ -87,7 +87,7 @@
                             <span class="label label-warning label-as-badge pull-right" data-bind="visible: estimate() >= 8 && estimate() < 20, text: estimate"></span>
                             <span class="label label-danger label-as-badge pull-right" data-bind="visible: estimate() >= 20 && estimate() <= 100, text: estimate"></span>
                             <span class="label label-default label-as-badge pull-right" data-bind="visible: estimate() == null">CURRENT</span>
-                            <span data-bind="text: $index()+1"></span>.&nbsp;<span data-bind="text: title"></span>
+                            <span data-bind="text: $index()+1"></span>.&nbsp;<span data-bind="html: $root.storyTitleHtml(title())"></span>
                             <span data-bind="visible: description().length">
                                 <br />
                                 <em data-bind="text: description" style="font-style: italic"></em>
@@ -126,12 +126,14 @@
     <script type="text/javascript">
     var _gameId = "@ViewBag.GameId";
     var _playerId = "@ViewBag.PlayerId";
+    var _jiraBaseUrl = @Html.Raw(System.Text.Json.JsonSerializer.Serialize((string)(ViewBag.JiraBaseUrl ?? "")));
 @{
         var jsonOptions = new System.Text.Json.JsonSerializerOptions { PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase };
     }
     var initialPlayers = convertToObservableList(@Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Players, jsonOptions)));
     var initialStories = convertToObservableList(@Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Stories, jsonOptions)));
     var _roundStarted = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.RoundStarted, jsonOptions));
+    var _hostCanVote = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.HostCanVote, jsonOptions));
     var myPlayer = getByValue(initialPlayers, "id", _playerId);
     var _fibSequence = [0, 0.5, 1, 2, 3, 5, 8, 13, 20, 40, 100, "?"];
 
@@ -186,6 +188,14 @@
         return nearest;
     }
 
+    function storyTitleHtml(title) {
+        var escaped = $('<span>').text(title).html();
+        if (!_jiraBaseUrl) return escaped;
+        return escaped.replace(/([A-Z][A-Z0-9]+-\d+)/g, function(match) {
+            return '<a href="' + _jiraBaseUrl + encodeURIComponent(match) + '" target="_blank" rel="noopener noreferrer">' + match + '</a>';
+        });
+    }
+
     function SortByPoints(a, b) {
         var aPoints = a.points();
         var bPoints = b.points() === "?" ? -1 : b.points();
@@ -202,6 +212,7 @@
         this.players = ko.observableArray(initialPlayers);
         this.showMedian = ko.observable(false);
         this.showMyVote = ko.observable(false);
+        this.hostCanVote = ko.observable(_hostCanVote);
         this.fibSequence = ko.observableArray(_fibSequence);
         this.votes = ko.observableArray([]);
         this.stories = ko.observableArray(initialStories);
@@ -215,6 +226,10 @@
                 self.timer(getRoundTime());
             }
         }, 1000);
+
+        this.storyTitleHtml = function(title) {
+            return storyTitleHtml(title);
+        }
 
         this.addStory = function () {
             if (self.storyTitle().length) {
@@ -252,9 +267,15 @@
             return desc;
         }, this);
 
+        this.isEligibleVoter = function(player) {
+            return self.hostCanVote() || !player.isHost();
+        }
+
         this.voteMedian = ko.computed(function() {
             var votes = [];
             $.each(self.players(), function(i, obj) {
+                if (!self.isEligibleVoter(obj))
+                    return;
                 if (obj.currentVote() != null && obj.currentVote() != -1) {
                     votes.push(obj.currentVote());
                 }
@@ -268,11 +289,15 @@
 
         this.allVoted = ko.computed(function () {
             var count = 0;
+            var total = 0;
             $.each(self.players(), function (i, obj) {
+                if (!self.isEligibleVoter(obj))
+                    return;
+                total++;
                 if (obj.currentVote() != null)
                     count++;
             });
-            var allVoted = count == self.players().length;
+            var allVoted = count == total;
             if (allVoted) {
                 self.estimate(self.voteMedian());
             } else {
