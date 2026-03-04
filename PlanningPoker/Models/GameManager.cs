@@ -1,70 +1,66 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.Caching;
+using Microsoft.Extensions.Caching.Memory;
 
-namespace PlanningPoker.Models
+namespace PlanningPoker.Models;
+
+public class GameManager
 {
-    public class GameManager
+    private const string CachePrefix = "PokerGame";
+    private static readonly object CacheLock = new();
+    private static readonly List<string> CacheKeys = new();
+    private static readonly IMemoryCache Cache = new MemoryCache(new MemoryCacheOptions());
+
+    public static int GameCount => CacheKeys.Count;
+
+    public static void StorePokerGame(PokerGame game)
     {
-        private const string CachePrefix = "PokerGame";
-        private static readonly object CacheLock = new object();
-        private static readonly List<string> CacheKeys = new List<string>();
-
-        public static int GameCount
+        var cacheKey = $"{CachePrefix}_{game.Id}";
+        StoreCacheObject(cacheKey, game, game.ExpirationDate);
+        
+        lock (CacheLock)
         {
-            get { return CacheKeys.Count; }
-        }
-
-        public static void StorePokerGame(PokerGame game)
-        {
-            var cacheKey = string.Format("{0}_{1}", CachePrefix, game.Id);
-            StoreCacheObject(cacheKey, game, game.ExpirationDate);
             if (!CacheKeys.Contains(cacheKey))
                 CacheKeys.Add(cacheKey);
         }
-        
-        public static PokerGame GetPokerGame(string cacheKey)
+    }
+    
+    public static PokerGame? GetPokerGame(string cacheKey)
+    {
+        return GetCacheObject<PokerGame>(cacheKey);
+    }
+
+    public static PokerGame? GetPokerGame(Guid gameId)
+    {
+        var cacheKey = $"{CachePrefix}_{gameId}";
+        return GetPokerGame(cacheKey);
+    }
+
+    public static IEnumerable<PokerGame> GetPokerGames()
+    {
+        return CacheKeys.Select(GetPokerGame).Where(g => g != null)!;
+    }
+
+    private static void StoreCacheObject(string cacheKey, object cacheObject, DateTime expirationDate)
+    {
+        lock (CacheLock)
         {
-            var game = GetCacheObject<PokerGame>(cacheKey);
-            return game;
+            Cache.Set(cacheKey, cacheObject, expirationDate);
+        }
+    }
+
+    private static T? GetCacheObject<T>(string cacheKey) where T : class
+    {
+        var cachedObject = Cache.Get(cacheKey) as T;
+
+        if (cachedObject != null)
+        {
+            return cachedObject;
         }
 
-        public static PokerGame GetPokerGame(Guid gameId)
+        lock (CacheLock)
         {
-            var cacheKey = string.Format("{0}_{1}", CachePrefix, gameId);
-            return GetPokerGame(cacheKey);
-        }
-
-        public static IEnumerable<PokerGame> GetPokerGames()
-        {
-            return CacheKeys.Select(GetPokerGame);
-        }
-
-        private static void StoreCacheObject(string cacheKey, object cacheObject, DateTime expirationDate)
-        {
-            lock (CacheLock)
-            {
-                MemoryCache.Default.Set(cacheKey, cacheObject, expirationDate);
-            }
-        }
-
-        private static T GetCacheObject<T>(string cacheKey) where T : class
-        {
-            var cachedObject = MemoryCache.Default.Get(cacheKey) as T;
-
-            if (cachedObject != null)
-            {
-                return cachedObject;
-            }
-
-            lock (CacheLock)
-            {
-                //Check to see if anyone wrote to the cache while we where waiting our turn to write the new value.
-                cachedObject = MemoryCache.Default.Get(cacheKey) as T;
-
-                return cachedObject;
-            }
+            // Check to see if anyone wrote to the cache while we were waiting our turn to write the new value.
+            cachedObject = Cache.Get(cacheKey) as T;
+            return cachedObject;
         }
     }
 }

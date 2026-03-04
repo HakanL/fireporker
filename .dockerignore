@@ -1,0 +1,11 @@
+**/.git
+**/.gitignore
+**/bin
+**/obj
+**/.vs
+**/.vscode
+**/packages
+**/*.user
+**/*.suo
+**/.DS_Store
+**/node_modules

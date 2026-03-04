@@ -1,21 +1,19 @@
-﻿using System;
-using Microsoft.AspNet.SignalR;
+using Microsoft.AspNetCore.SignalR;
 using PlanningPoker.Models;
 
-namespace PlanningPoker
+namespace PlanningPoker;
+
+public class PokeR
 {
-    public class PokeR
+    private readonly IHubContext<PokerHub> _context;
+
+    public PokeR(IHubContext<PokerHub> context)
     {
-        private IHubContext _context;
+        _context = context;
+    }
 
-        public PokeR(IHubContext context)
-        {
-            _context = context;
-        }
-
-        public void PlayerJoined(Guid gameId, Player name)
-        {
-            _context.Clients.Group(gameId.ToString()).playerJoined(name);
-        }
+    public async Task PlayerJoined(Guid gameId, Player player)
+    {
+        await _context.Clients.Group(gameId.ToString()).SendAsync("playerJoined", player);
     }
 }
