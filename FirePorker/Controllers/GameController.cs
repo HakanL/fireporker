@@ -137,7 +137,7 @@ public class GameController : Controller
 
     // POST: Game/Create
     [HttpPost]
-    public IActionResult Create(string? HostName, string? Name, string? Description)
+    public IActionResult Create(string? HostName, string? Name, string? Description, bool HostCanVote = false)
     {
         try
         {
@@ -145,7 +145,7 @@ public class GameController : Controller
 
             if (isValid)
             {
-                var game = new PokerGame(Name, HostName, Description ?? string.Empty);
+                var game = new PokerGame(Name, HostName, Description ?? string.Empty) { HostCanVote = HostCanVote };
                 GameManager.StorePokerGame(game);
 
                 var cookieValue = $"{game.Id}|{game.Host.Id}";

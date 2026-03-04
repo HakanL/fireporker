@@ -33,7 +33,7 @@
                 </div>
             </div>
 
-            <div class="panel panel-info" data-bind="visible: allVoted() == false && currentStory() != null" style="display: none;">
+            <div class="panel panel-info" data-bind="visible: allVoted() == false && currentStory() != null && (myPlayer.isHost() == false || hostCanVote())" style="display: none;">
                 <div class="panel-heading">Select your estimate</div>
                 <div class="panel-body" data-bind="foreach: fibSequence">
                     <button type="button" class="btn btn-default" data-bind="click: $root.submitVote.bind($data), text: $data"></button>
@@ -132,6 +132,7 @@
     var initialPlayers = convertToObservableList(@Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Players, jsonOptions)));
     var initialStories = convertToObservableList(@Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Stories, jsonOptions)));
     var _roundStarted = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.RoundStarted, jsonOptions));
+    var _hostCanVote = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.HostCanVote, jsonOptions));
     var myPlayer = getByValue(initialPlayers, "id", _playerId);
     var _fibSequence = [0, 0.5, 1, 2, 3, 5, 8, 13, 20, 40, 100, "?"];
 
@@ -202,6 +203,7 @@
         this.players = ko.observableArray(initialPlayers);
         this.showMedian = ko.observable(false);
         this.showMyVote = ko.observable(false);
+        this.hostCanVote = ko.observable(_hostCanVote);
         this.fibSequence = ko.observableArray(_fibSequence);
         this.votes = ko.observableArray([]);
         this.stories = ko.observableArray(initialStories);
@@ -252,9 +254,15 @@
             return desc;
         }, this);
 
+        this.isEligibleVoter = function(player) {
+            return self.hostCanVote() || !player.isHost();
+        }
+
         this.voteMedian = ko.computed(function() {
             var votes = [];
             $.each(self.players(), function(i, obj) {
+                if (!self.isEligibleVoter(obj))
+                    return;
                 if (obj.currentVote() != null && obj.currentVote() != -1) {
                     votes.push(obj.currentVote());
                 }
@@ -268,11 +276,15 @@
 
         this.allVoted = ko.computed(function () {
             var count = 0;
+            var total = 0;
             $.each(self.players(), function (i, obj) {
+                if (!self.isEligibleVoter(obj))
+                    return;
+                total++;
                 if (obj.currentVote() != null)
                     count++;
             });
-            var allVoted = count == self.players().length;
+            var allVoted = count == total;
             if (allVoted) {
                 self.estimate(self.voteMedian());
             } else {

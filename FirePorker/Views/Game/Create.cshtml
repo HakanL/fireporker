@@ -33,6 +33,13 @@
 
         <div class="form-group">
             <div class="col-md-offset-2 col-md-10">
+                <input type="checkbox" name="HostCanVote" id="HostCanVote" value="true" @(Model?.HostCanVote == true ? "checked" : "") />
+                <label for="HostCanVote">Allow host to vote</label>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <div class="col-md-offset-2 col-md-10">
                 <input type="submit" value="Create" class="btn btn-default" />
             </div>
         </div>

@@ -18,6 +18,7 @@ public class PokerGame
     public DateTime ExpirationDate { get; set; }
     public IList<Story> Stories { get; set; }
     public DateTime RoundStarted { get; set; }
+    public bool HostCanVote { get; set; } = false;
 
     // TODO: Configurable number set?
     
