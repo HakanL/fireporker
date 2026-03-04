@@ -22,10 +22,10 @@
                 <div class="panel-body">
                     <div data-bind="foreach: votes" class="clearfix">
                         <div data-bind="attr: {'id': playerId()}" style="display: none; padding-right: 15px; text-align: center;" class="pull-left">
-                            <div data-bind="visible: $root.allVoted() == false && (playerId() != myPlayer.id() || !$root.showMyVote())">
+                            <div data-bind="visible: $root.allVoted() == false && playerId() != myPlayer.id()">
                                 <img src="/Content/CardBack.png" class="card_back" />
                             </div>
-                            <div data-bind="text: points(), visible: $root.allVoted() == true || (playerId() == myPlayer.id() && $root.showMyVote())" class="card_visible"></div>
+                            <div data-bind="text: points(), visible: $root.allVoted() == true || playerId() == myPlayer.id()" class="card_visible"></div>
                             <span data-bind="text: name, visible: playerId() != myPlayer.id()"></span>
                             <em data-bind="visible: playerId() == myPlayer.id()">Me</em>
                         </div>
@@ -43,9 +43,6 @@
             <div class="panel panel-success" data-bind="visible: myPlayer.isHost() == true && currentStory() != null" style="display: none;">
                 <div class="panel-heading">Host tools</div>
                 <div class="panel-body form-inline">
-
-                    <input type="checkbox" id="showMyVote" data-bind="checked: showMyVote"/>
-                    <label class="control-label" for="showMyVote" data-bind="text: showHideLabel(showMyVote,'my vote')"></label>
 
                     <div class="form-group">
                         <input type="checkbox" id="showMedian" data-bind="checked: showMedian"/>
@@ -211,7 +208,6 @@
         this.connection = null;
         this.players = ko.observableArray(initialPlayers);
         this.showMedian = ko.observable(false);
-        this.showMyVote = ko.observable(false);
         this.hostCanVote = ko.observable(_hostCanVote);
         this.fibSequence = ko.observableArray(_fibSequence);
         this.votes = ko.observableArray([]);
