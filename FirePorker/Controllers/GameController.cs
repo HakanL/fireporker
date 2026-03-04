@@ -9,6 +9,8 @@ public class GameController : Controller
     private readonly IHubContext<PokerHub> _hubContext;
     private readonly Lazy<PokeR> _pokeR;
     private const string CookieName = "FirePorker";
+    private static readonly System.Text.RegularExpressions.Regex JiraBaseUrlRegex =
+        new(@"^(https?://[^/]+/browse/)", System.Text.RegularExpressions.RegexOptions.Compiled);
 
     public GameController(IHubContext<PokerHub> hubContext)
     {
@@ -58,6 +60,7 @@ public class GameController : Controller
         ViewBag.GameId = gameId;
         ViewBag.PlayerId = playerId;
         ViewBag.Title = game.Name;
+        ViewBag.JiraBaseUrl = game.JiraBaseUrl;
         ViewBag.Now = DateTime.UtcNow;
 
         // All tests passed!
@@ -137,7 +140,7 @@ public class GameController : Controller
 
     // POST: Game/Create
     [HttpPost]
-    public IActionResult Create(string? HostName, string? Name, string? Description, bool HostCanVote = false)
+    public IActionResult Create(string? HostName, string? Name, string? Description, string? JiraUrl, bool HostCanVote = false)
     {
         try
         {
@@ -145,7 +148,15 @@ public class GameController : Controller
 
             if (isValid)
             {
-                var game = new PokerGame(Name, HostName, Description ?? string.Empty) { HostCanVote = HostCanVote };
+                var jiraBaseUrl = string.Empty;
+                if (!string.IsNullOrWhiteSpace(JiraUrl))
+                {
+                    var match = JiraBaseUrlRegex.Match(JiraUrl.Trim());
+                    if (match.Success)
+                        jiraBaseUrl = match.Groups[1].Value;
+                }
+
+                var game = new PokerGame(Name, HostName, Description ?? string.Empty, jiraBaseUrl) { HostCanVote = HostCanVote };
                 GameManager.StorePokerGame(game);
 
                 var cookieValue = $"{game.Id}|{game.Host.Id}";

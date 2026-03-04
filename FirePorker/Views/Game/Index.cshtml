@@ -6,7 +6,7 @@
 
             <div class="well well-sm" data-bind="visible: currentStory() != null" style="display: none;">
                 <em>Current story:</em><br/>
-                <strong data-bind="text: currentStoryTitle"></strong>
+                <strong data-bind="html: storyTitleHtml(currentStoryTitle())"></strong>
                 <em data-bind="text: currentStoryDescription"></em>
             </div>
 
@@ -87,7 +87,7 @@
                             <span class="label label-warning label-as-badge pull-right" data-bind="visible: estimate() >= 8 && estimate() < 20, text: estimate"></span>
                             <span class="label label-danger label-as-badge pull-right" data-bind="visible: estimate() >= 20 && estimate() <= 100, text: estimate"></span>
                             <span class="label label-default label-as-badge pull-right" data-bind="visible: estimate() == null">CURRENT</span>
-                            <span data-bind="text: $index()+1"></span>.&nbsp;<span data-bind="text: title"></span>
+                            <span data-bind="text: $index()+1"></span>.&nbsp;<span data-bind="html: $root.storyTitleHtml(title())"></span>
                             <span data-bind="visible: description().length">
                                 <br />
                                 <em data-bind="text: description" style="font-style: italic"></em>
@@ -126,6 +126,7 @@
     <script type="text/javascript">
     var _gameId = "@ViewBag.GameId";
     var _playerId = "@ViewBag.PlayerId";
+    var _jiraBaseUrl = @Html.Raw(System.Text.Json.JsonSerializer.Serialize((string)(ViewBag.JiraBaseUrl ?? "")));
 @{
         var jsonOptions = new System.Text.Json.JsonSerializerOptions { PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase };
     }
@@ -187,6 +188,14 @@
         return nearest;
     }
 
+    function storyTitleHtml(title) {
+        var escaped = $('<span>').text(title).html();
+        if (!_jiraBaseUrl) return escaped;
+        return escaped.replace(/([A-Z][A-Z0-9]+-\d+)/g, function(match) {
+            return '<a href="' + _jiraBaseUrl + encodeURIComponent(match) + '" target="_blank" rel="noopener noreferrer">' + match + '</a>';
+        });
+    }
+
     function SortByPoints(a, b) {
         var aPoints = a.points();
         var bPoints = b.points() === "?" ? -1 : b.points();
@@ -217,6 +226,10 @@
                 self.timer(getRoundTime());
             }
         }, 1000);
+
+        this.storyTitleHtml = function(title) {
+            return storyTitleHtml(title);
+        }
 
         this.addStory = function () {
             if (self.storyTitle().length) {
