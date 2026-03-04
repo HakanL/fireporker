@@ -2,6 +2,31 @@
     ViewBag.Title = "About";
 }
 <h2>@ViewBag.Title.</h2>
-<h3>@ViewBag.Message</h3>
 
-<p>Use this area to provide additional information.</p>
+<p>FirePorker 🔥🐷 is a real-time planning poker app for agile teams, built with ASP.NET Core 8 and SignalR.</p>
+
+<h3>Features</h3>
+<ul>
+    <li><strong>Real-time voting</strong> — See votes appear instantly via SignalR</li>
+    <li><strong>Multiple games</strong> — Host multiple concurrent planning sessions</li>
+    <li><strong>Story management</strong> — Add stories, track estimates</li>
+    <li><strong>Host controls</strong> — Clear votes, accept estimates, remove players</li>
+    <li><strong>No accounts needed</strong> — Cookie-based sessions, jump right in</li>
+</ul>
+
+<h3>How It Works</h3>
+<ol>
+    <li><strong>Create a game</strong> — Enter your name and game name</li>
+    <li><strong>Share the link</strong> — Other players join via the game URL</li>
+    <li><strong>Add stories</strong> — Host adds stories to estimate</li>
+    <li><strong>Vote</strong> — Everyone picks a point value</li>
+    <li><strong>Reveal</strong> — When all votes are in, cards flip</li>
+    <li><strong>Accept</strong> — Host accepts the estimate, move to next story</li>
+</ol>
+
+<h3>Notes</h3>
+<ul>
+    <li>Game state is <strong>in-memory only</strong> — games are lost on restart</li>
+    <li>Games expire after 24 hours of inactivity</li>
+    <li>No authentication — anyone with the link can join</li>
+</ul>
