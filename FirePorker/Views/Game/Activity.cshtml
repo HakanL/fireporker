@@ -1,0 +1,206 @@
+@model IEnumerable<FirePorker.Models.PokerGame>
+
+@{
+    ViewBag.Title = "Activity";
+}
+
+<style>
+    @@keyframes pulse {
+        0% { background-color: rgba(92, 184, 92, 0.3); }
+        100% { background-color: transparent; }
+    }
+    .pulse {
+        animation: pulse 1.5s ease-out;
+    }
+    .status-label {
+        min-width: 60px;
+        display: inline-block;
+        text-align: center;
+    }
+</style>
+
+<h2>Activity</h2>
+<p class="text-muted">Active planning poker sessions</p>
+
+<div id="game-list-container">
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info" id="empty-state">
+            <strong>No active games right now.</strong>
+            <br />
+            <a href="@Url.Action("Create", "Game")">Create a new game</a> to get started.
+        </div>
+    }
+    else
+    {
+        <table class="table table-striped" id="game-table">
+            <thead>
+                <tr>
+                    <th>Game</th>
+                    <th>Players</th>
+                    <th>Status</th>
+                    <th>Progress</th>
+                    <th>Expires</th>
+                </tr>
+            </thead>
+            <tbody id="game-tbody">
+            @foreach (var game in Model.OrderByDescending(g => g.Status == "Voting").ThenByDescending(g => g.Players.Count))
+            {
+                <tr data-key="@game.TrackingKey" data-status="@game.Status" data-progress="@game.Progress" data-players="@game.Players.Count">
+                    <td><strong>@game.Name</strong></td>
+                    <td>@game.Players.Count</td>
+                    <td>
+                        @if (game.Status == "Voting")
+                        {
+                            <span class="label label-success status-label">Voting</span>
+                        }
+                        else if (game.Status == "Waiting")
+                        {
+                            <span class="label label-warning status-label">Waiting</span>
+                        }
+                        else
+                        {
+                            <span class="label label-default status-label">Idle</span>
+                        }
+                    </td>
+                    <td>
+                        @if (game.Status != "Idle")
+                        {
+                            <span>@game.Progress voted</span>
+                        }
+                        else
+                        {
+                            <span class="text-muted">—</span>
+                        }
+                    </td>
+                    <td><span class="text-muted">@game.ExpiresIn</span></td>
+                </tr>
+            }
+            </tbody>
+        </table>
+        
+        <p class="text-muted">
+            <small><span id="game-count">@Model.Count()</span> active game@(Model.Count() != 1 ? "s" : "")</small>
+        </p>
+    }
+</div>
+
+@section Scripts {
+<script>
+    var previousData = {};
+    var refreshInterval = 5000; // 5 seconds
+
+    function initializeData() {
+        $('#game-tbody tr').each(function() {
+            var key = $(this).data('key');
+            previousData[key] = {
+                status: $(this).data('status'),
+                progress: $(this).data('progress'),
+                players: $(this).data('players')
+            };
+        });
+    }
+
+    function refreshList() {
+        $.getJSON('@Url.Action("ActivityData", "Game")', function(games) {
+            if (games.length === 0) {
+                // Show empty state
+                $('#game-list-container').html(
+                    '<div class="alert alert-info" id="empty-state">' +
+                    '<strong>No active games right now.</strong><br />' +
+                    '<a href="@Url.Action("Create", "Game")">Create a new game</a> to get started.' +
+                    '</div>'
+                );
+                previousData = {};
+                return;
+            }
+
+            // Build new table if it doesn't exist
+            if ($('#game-table').length === 0) {
+                location.reload(); // Simple reload if structure changed
+                return;
+            }
+
+            var newKeys = {};
+            games.forEach(function(game) {
+                newKeys[game.key] = true;
+                var row = $('tr[data-key="' + game.key + '"]');
+                
+                if (row.length === 0) {
+                    // New game - will pulse after reload
+                    location.reload();
+                    return;
+                }
+
+                // Check for changes
+                var prev = previousData[game.key] || {};
+                var changed = prev.status !== game.status || 
+                              prev.progress !== game.progress || 
+                              prev.players !== game.playerCount;
+
+                if (changed) {
+                    // Update the row
+                    updateRow(row, game);
+                    row.addClass('pulse');
+                    setTimeout(function() { row.removeClass('pulse'); }, 1500);
+                }
+
+                // Update tracking
+                previousData[game.key] = {
+                    status: game.status,
+                    progress: game.progress,
+                    players: game.playerCount
+                };
+            });
+
+            // Check for removed games
+            for (var key in previousData) {
+                if (!newKeys[key]) {
+                    $('tr[data-key="' + key + '"]').fadeOut(300, function() {
+                        $(this).remove();
+                    });
+                    delete previousData[key];
+                }
+            }
+
+            // Update count
+            $('#game-count').text(games.length);
+        });
+    }
+
+    function updateRow(row, game) {
+        row.data('status', game.status);
+        row.data('progress', game.progress);
+        row.data('players', game.playerCount);
+
+        // Update player count
+        row.find('td:eq(1)').text(game.playerCount);
+
+        // Update status
+        var statusHtml;
+        if (game.status === 'Voting') {
+            statusHtml = '<span class="label label-success status-label">Voting</span>';
+        } else if (game.status === 'Waiting') {
+            statusHtml = '<span class="label label-warning status-label">Waiting</span>';
+        } else {
+            statusHtml = '<span class="label label-default status-label">Idle</span>';
+        }
+        row.find('td:eq(2)').html(statusHtml);
+
+        // Update progress
+        if (game.status !== 'Idle') {
+            row.find('td:eq(3)').html('<span>' + game.progress + ' voted</span>');
+        } else {
+            row.find('td:eq(3)').html('<span class="text-muted">—</span>');
+        }
+
+        // Update expires
+        row.find('td:eq(4)').html('<span class="text-muted">' + game.expiresIn + '</span>');
+    }
+
+    $(function() {
+        initializeData();
+        setInterval(refreshList, refreshInterval);
+    });
+</script>
+}

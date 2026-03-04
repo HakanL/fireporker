@@ -19,6 +19,51 @@ public class PokerGame
     public IList<Story> Stories { get; set; }
     public DateTime RoundStarted { get; set; }
 
+    // Computed properties for list view
+    public Story? CurrentStory => Stories.FirstOrDefault(s => s.Estimate == null);
+    
+    public string Status
+    {
+        get
+        {
+            if (CurrentStory == null)
+                return "Idle";
+            
+            var votedCount = Players.Count(p => p.CurrentVote != null);
+            return votedCount > 0 ? "Voting" : "Waiting";
+        }
+    }
+    
+    public int VotedCount => Players.Count(p => p.CurrentVote != null);
+    
+    public string Progress
+    {
+        get
+        {
+            if (CurrentStory == null)
+                return "—";
+            return $"{VotedCount}/{Players.Count}";
+        }
+    }
+    
+    public string ExpiresIn
+    {
+        get
+        {
+            var remaining = ExpirationDate - DateTime.UtcNow;
+            if (remaining.TotalMinutes < 1)
+                return "soon";
+            if (remaining.TotalHours < 1)
+                return $"in {(int)remaining.TotalMinutes}m";
+            if (remaining.TotalDays < 1)
+                return $"in {(int)remaining.TotalHours}h";
+            return $"in {(int)remaining.TotalDays}d";
+        }
+    }
+    
+    // Stable tracking key for activity view (not reversible to real ID)
+    public string TrackingKey => Id.GetHashCode().ToString("x8");
+
     // TODO: Configurable number set?
     
     public PokerGame(string name, string hostName, string description = "", string id = "")

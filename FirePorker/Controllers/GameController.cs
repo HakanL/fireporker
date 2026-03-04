@@ -129,10 +129,29 @@ public class GameController : Controller
 #endif
     }
 
-    public IActionResult List()
+    public IActionResult Activity()
     {
         var games = GameManager.GetPokerGames();
         return View(games);
+    }
+
+    // GET: Game/ActivityData (JSON for AJAX refresh)
+    [HttpGet]
+    public IActionResult ActivityData()
+    {
+        var games = GameManager.GetPokerGames()
+            .OrderByDescending(g => g.Status == "Voting")
+            .ThenByDescending(g => g.Players.Count)
+            .Select(g => new
+            {
+                key = g.TrackingKey,
+                name = g.Name,
+                playerCount = g.Players.Count,
+                status = g.Status,
+                progress = g.Progress,
+                expiresIn = g.ExpiresIn
+            });
+        return Json(games);
     }
 
     // POST: Game/Create
