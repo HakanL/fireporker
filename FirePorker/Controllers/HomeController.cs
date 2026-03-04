@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
-using PlanningPoker.Models;
+using FirePorker.Models;
 
-namespace PlanningPoker.Controllers;
+namespace FirePorker.Controllers;
 
 public class HomeController : Controller
 {

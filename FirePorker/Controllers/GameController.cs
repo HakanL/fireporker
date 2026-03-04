@@ -1,14 +1,14 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
-using PlanningPoker.Models;
+using FirePorker.Models;
 
-namespace PlanningPoker.Controllers;
+namespace FirePorker.Controllers;
 
 public class GameController : Controller
 {
     private readonly IHubContext<PokerHub> _hubContext;
     private readonly Lazy<PokeR> _pokeR;
-    private const string CookieName = "PlanningPoker";
+    private const string CookieName = "FirePorker";
 
     public GameController(IHubContext<PokerHub> hubContext)
     {

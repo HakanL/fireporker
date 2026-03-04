@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.SignalR;
-using PlanningPoker.Models;
+using FirePorker.Models;
 
-namespace PlanningPoker;
+namespace FirePorker;
 
 public class PokeR
 {

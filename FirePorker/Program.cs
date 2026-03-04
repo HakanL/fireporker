@@ -36,6 +36,6 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
-app.MapHub<PlanningPoker.PokerHub>("/signalr/hubs");
+app.MapHub<FirePorker.PokerHub>("/signalr/hubs");
 
 app.Run();

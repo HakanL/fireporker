@@ -53,7 +53,7 @@ docker run -p 8080:8080 fireporker
 Requires [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
 
 ```bash
-cd PlanningPoker
+cd FirePorker
 dotnet run
 ```
 

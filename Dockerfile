@@ -3,17 +3,17 @@ FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
 # Copy csproj and restore dependencies
-COPY PlanningPoker/PlanningPoker.csproj PlanningPoker/
-RUN dotnet restore PlanningPoker/PlanningPoker.csproj
+COPY FirePorker/FirePorker.csproj FirePorker/
+RUN dotnet restore FirePorker/FirePorker.csproj
 
 # Copy everything else and build
-COPY PlanningPoker/ PlanningPoker/
-WORKDIR /src/PlanningPoker
-RUN dotnet build PlanningPoker.csproj -c Release -o /app/build
+COPY FirePorker/ FirePorker/
+WORKDIR /src/FirePorker
+RUN dotnet build FirePorker.csproj -c Release -o /app/build
 
 # Publish stage
 FROM build AS publish
-RUN dotnet publish PlanningPoker.csproj -c Release -o /app/publish /p:UseAppHost=false
+RUN dotnet publish FirePorker.csproj -c Release -o /app/publish /p:UseAppHost=false
 
 # Runtime stage
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
@@ -22,4 +22,4 @@ EXPOSE 8080
 EXPOSE 8081
 
 COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "PlanningPoker.dll"]
+ENTRYPOINT ["dotnet", "FirePorker.dll"]

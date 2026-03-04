@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Caching.Memory;
 
-namespace PlanningPoker.Models;
+namespace FirePorker.Models;
 
 public class GameManager
 {

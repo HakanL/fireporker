@@ -1,4 +1,4 @@
-namespace PlanningPoker.Models;
+namespace FirePorker.Models;
 
 public class Story
 {
