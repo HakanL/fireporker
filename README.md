@@ -14,15 +14,36 @@ A real-time planning poker app for agile teams. Built with ASP.NET Core 8 and Si
 
 ### Docker Compose (recommended)
 
+Create a `docker-compose.yml`:
+
+```yaml
+services:
+  fireporker:
+    image: ghcr.io/mkaltner/fireporker:latest
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+```
+
+Then run:
+
 ```bash
 docker compose up -d
 ```
 
 App will be available at `http://localhost:8080`
 
-### Docker
+### Docker (standalone)
 
 ```bash
+docker run -d -p 8080:8080 ghcr.io/mkaltner/fireporker:latest
+```
+
+### Build from source
+
+```bash
+git clone https://github.com/mkaltner/fireporker.git
+cd fireporker
 docker build -t fireporker .
 docker run -p 8080:8080 fireporker
 ```
